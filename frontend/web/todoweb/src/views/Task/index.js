@@ -24,15 +24,19 @@ function Task({match}) {
   const [hour, setHour] = useState();
 
   async function LoadTaskDetails(){
-    await api.get(`/task/${match.params.id}`)
-    .then(response => {
-      setType(response.data.type)
-      setDone(response.data.done)
-      setTitle(response.data.title)
-      setDescription(response.data.description)
-      setDate(format(new Date(response.data.when), 'yyyy-MM-dd'))
-      setHour(format(new Date(response.data.when), 'HH:mm'))
-    })
+    if(!match.params.id){
+      Clear();
+    }else{
+      await api.get(`/task/${match.params.id}`)
+      .then(response => {
+        setType(response.data.type)
+        setDone(response.data.done)
+        setTitle(response.data.title)
+        setDescription(response.data.description)
+        setDate(format(new Date(response.data.when), 'yyyy-MM-dd'))
+        setHour(format(new Date(response.data.when), 'HH:mm'))
+      })
+    }
   }
 
   async function Clear(){
@@ -99,10 +103,7 @@ function Task({match}) {
     if(!isConnected){
       setRedirect(true);
     }
-    Clear();
-    if(match.params.id){
-      LoadTaskDetails();
-    }
+    LoadTaskDetails();
   }, [match.params.id])
 
   return (
