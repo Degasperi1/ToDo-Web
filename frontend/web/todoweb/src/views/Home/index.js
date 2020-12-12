@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {Link} from 'react-router-dom';
+import {Link, Redirect} from 'react-router-dom';
 import * as S from './styles';
 import api from '../../services/api';
+import isConnected from '../../utils/isConnected';
 
 //Componentes
 import Header from '../../components/Header';
@@ -12,9 +13,10 @@ import TaskCard from '../../components/TaskCard';
 function Home() {
   const [filterActived, setFilterActived] = useState("all");
   const [tasks, setTasks] = useState([]);
+  const [redirect, setRedirect] = useState(false);
 
   async function loadTasks() {
-    await api.get(`/task/filter/${filterActived}/11:11:11:11:11:11`)
+    await api.get(`/task/filter/${filterActived}/${isConnected}`)
       .then(response => {
         setTasks(response.data)
       })
@@ -27,10 +29,15 @@ function Home() {
   //atualizar o conteúdo a cada vez que a tela for carregada ou o filtro for atualizado
   useEffect(() => {
     loadTasks();
+
+    if(!isConnected){
+      setRedirect(true)
+    }
   }, [filterActived])
 
   return (
     <S.Container>
+      { redirect && <Redirect to="/qrcode"/>}
       <Header clickNotification={notification}/>
 
       <S.FilterArea>

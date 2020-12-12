@@ -4,6 +4,7 @@ import * as S from './styles';
 import {format} from 'date-fns';
 
 import api from '../../services/api';
+import isConnected from '../../utils/isConnected';
 
 //Componentes
 import Header from '../../components/Header';
@@ -21,7 +22,6 @@ function Task({match}) {
   const [description, setDescription] = useState();
   const [date, setDate] = useState();
   const [hour, setHour] = useState();
-  const [macaddress, setMacaddress] = useState('11:11:11:11:11:11');
 
   async function LoadTaskDetails(){
     await api.get(`/task/${match.params.id}`)
@@ -33,6 +33,16 @@ function Task({match}) {
       setDate(format(new Date(response.data.when), 'yyyy-MM-dd'))
       setHour(format(new Date(response.data.when), 'HH:mm'))
     })
+  }
+
+  async function Clear(){
+    console.log('limpando');
+    setType(1);
+    setTitle('');
+    setDone(false);
+    setDescription('');
+    setDate('');
+    setHour('');
   }
 
   async function Save(){
@@ -51,7 +61,7 @@ function Task({match}) {
 
     if(match.params.id){
       await api.put(`/task/${match.params.id}`, {
-        macaddress,
+        macaddress: isConnected,
         done,
         type,
         title,
@@ -63,7 +73,7 @@ function Task({match}) {
 
     }else{
       await api.post('/task', {
-        macaddress,
+        macaddress: isConnected,
         type,
         title,
         description,
@@ -86,8 +96,14 @@ function Task({match}) {
 
   //atualizar o conteúdo a cada vez que a tela for carregada ou o filtro for atualizado
   useEffect(() => {
-    LoadTaskDetails();
-  }, [])
+    if(!isConnected){
+      setRedirect(true);
+    }
+    Clear();
+    if(match.params.id){
+      LoadTaskDetails();
+    }
+  }, [match.params.id])
 
   return (
     <S.Container>
@@ -122,14 +138,12 @@ function Task({match}) {
           <span>Data</span>
           <input type="date" placeholder="Data"
           onChange={e => setDate(e.target.value)} value={date}/>
-          <img src={iconCalendar} alt="Calendário" />
         </S.Input>
 
         <S.Input>
           <span>Hora</span>
           <input type="time" placeholder="Hora"
           onChange={e => setHour(e.target.value)} value={hour}/>
-          <img src={iconClock} alt="Relógio" />
         </S.Input>
 
         <S.Options>
@@ -137,7 +151,7 @@ function Task({match}) {
             <input type="checkbox" checked={done} onChange={() => setDone(!done)}/>
             <span>CONCLUÍDO</span>
           </div>
-          {match.params.id && <button type="button" onClick={Remove}>EXCLUIR</button>}
+          {match.params.id && <button type="button" onClick={Remove}>EXCLUIR</button> }
 
         </S.Options>
 
